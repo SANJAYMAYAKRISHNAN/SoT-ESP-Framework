@@ -1,8 +1,3 @@
-"""
-@Author https://github.com/DougTheDruid
-@Source https://github.com/DougTheDruid/SoT-ESP-Framework
-For community support, please contact me on Discord: DougTheDruid#2784
-"""
 from base64 import b64decode
 import pyglet
 from pyglet.text import Label
@@ -10,7 +5,6 @@ from pyglet.gl import Config
 from helpers import SOT_WINDOW, SOT_WINDOW_H, SOT_WINDOW_W, main_batch, \
     version, logger, initialize_window
 from sot_hack import SoTMemoryReader
-
 
 # The FPS __Target__ for the program.
 FPS_TARGET = 60
@@ -21,7 +15,6 @@ DEBUG = False
 # Pyglet clock used to track time via FPS
 clock = pyglet.clock.Clock()
 
-
 def generate_all(_):
     """
     Triggers an entire read_actors call in our SoT Memory Reader. Will
@@ -29,7 +22,6 @@ def generate_all(_):
     or render distance.
     """
     smr.read_actors()
-
 
 def update_graphics(_):
     """
@@ -53,10 +45,9 @@ def update_graphics(_):
         if actor.to_delete:
             to_remove.append(actor)
 
-    # Clean up any items which arent valid anymore
+    # Clean up any items which aren't valid anymore
     for removable in to_remove:
         smr.display_objects.remove(removable)
-
 
 if __name__ == '__main__':
     logger.info(
@@ -73,11 +64,8 @@ if __name__ == '__main__':
         while True:
             smr.read_actors()
 
-    # You may want to add/modify this custom config per the pyglet docs to
-    # disable vsync or other options: https://tinyurl.com/45tcx6eu
+    # Create a Pyglet window with specified dimensions
     config = Config(double_buffer=True, depth_size=24, alpha_size=8)
-
-    # Create an overlay window with Pyglet at the same size as our SoT Window
     window = pyglet.window.Window(SOT_WINDOW_W, SOT_WINDOW_H,
                                   vsync=False, style='overlay', config=config,
                                   caption="DougTheDruid's ESP Framework")
@@ -98,7 +86,30 @@ if __name__ == '__main__':
         # Update our player count Label & crew list
         if smr.crew_data:
             player_count.text = f"Player Count: {smr.crew_data.total_players}"
-            # crew_list.text = smr.crew_data.crew_str
+        
+        # Calculate actor size based on number of actors
+        num_actors = len(smr.display_objects)
+        if num_actors > 0:
+            # Example layout: arrange in a grid
+            grid_size = int(num_actors**0.5)  # Approximate number of squares per row/column
+            s = SOT_WINDOW_W // grid_size  # Calculate width of each square
+            y = SOT_WINDOW_H // grid_size  # Calculate height of each square
+
+            for index, actor in enumerate(smr.display_objects):
+                # Calculate the position of each actor square
+                row = index // grid_size
+                col = index % grid_size
+                x_pos = col * s
+                y_pos = row * y
+
+                # Draw the square (using pyglet graphics)
+                pyglet.graphics.draw(4, pyglet.gl.GL_QUADS,
+                    ('v2f', [x_pos, y_pos, 
+                              x_pos + s, y_pos, 
+                              x_pos + s, y_pos + y, 
+                              x_pos, y_pos + y]),
+                    ('c3B', [255, 0, 0] * 4)  # Color (red)
+                )
 
         # Draw our main batch & FPS counter at the bottom left
         main_batch.draw()
@@ -107,7 +118,7 @@ if __name__ == '__main__':
     # Initializing the window for writing
     init = initialize_window()
 
-    # We schedule an "update all" to scan all actors every 5seconds
+    # We schedule an "update all" to scan all actors every 5 seconds
     pyglet.clock.schedule_interval(generate_all, 5)
 
     # We schedule a check to make sure the game is still running every 3 seconds
@@ -118,7 +129,6 @@ if __name__ == '__main__':
     pyglet.clock.schedule(update_graphics)
 
     # Adds an FPS counter at the bottom left corner of our pyglet window
-    # Note: May not translate to actual FPS, but rather FPS of the program
     fps_display = pyglet.window.FPSDisplay(window)
 
     # Our base player_count label in the top-right of our screen. Updated
@@ -128,15 +138,6 @@ if __name__ == '__main__':
                          x=SOT_WINDOW_W * 0.85,
                          y=SOT_WINDOW_H * 0.9, batch=main_batch)
 
-    # The label for showing all players on the server under the count
-    # This purely INITIALIZES it does not inherently update automatically
-    if False:  # pylint: disable=using-constant-test
-        crew_list = Label("", x=SOT_WINDOW_W * 0.85,
-                          y=(SOT_WINDOW_H-25) * 0.9, batch=main_batch, width=300,
-                          multiline=True)
-        # Note: The width of 300 is the max pixel width of a single line
-        # before auto-wrapping the text to the next line. Updated in on_draw()
-
     # Runs our application, targeting a specific refresh rate (1/60 = 60fps)
-    pyglet.app.run(interval=1/FPS_TARGET)
+    pyglet.app.run(interval=1 / FPS_TARGET)
     # Note - ***Nothing past here will execute as app.run() is a loop***
