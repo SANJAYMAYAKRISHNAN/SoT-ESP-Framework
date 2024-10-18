@@ -65,7 +65,13 @@ if __name__ == '__main__':
     logger.info(f"Hack Version: {version}")
 
     # Initialize our SoT Hack object, and do a first run of reading actors
-    smr = SoTMemoryReader()
+    try:
+        logger.info("Initializing SoTMemoryReader")
+        smr = SoTMemoryReader()
+        logger.info("SoTMemoryReader initialized successfully")
+    except Exception as e:
+        logger.error(f"Error initializing memory reader: {e}")
+        exit(1)
 
     # Custom Debug mode for using a literal python interpreter debugger
     # to validate our fields. Does not generate a GUI.
@@ -107,7 +113,7 @@ if __name__ == '__main__':
     # Initializing the window for writing
     init = initialize_window()
 
-    # We schedule an "update all" to scan all actors every 5seconds
+    # We schedule an "update all" to scan all actors every 5 seconds
     pyglet.clock.schedule_interval(generate_all, 5)
 
     # We schedule a check to make sure the game is still running every 3 seconds
